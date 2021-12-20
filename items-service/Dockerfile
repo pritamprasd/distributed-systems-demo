@@ -1,4 +1,4 @@
-FROM python:3.9-slim-buster
+FROM tiangolo/uvicorn-gunicorn-fastapi:python3.9
 
 WORKDIR /app
 
@@ -13,6 +13,6 @@ RUN poetry install --no-interaction
 
 EXPOSE 8080
 
-CMD ["uvicorn","app:app", "--reload"]
+CMD ["uvicorn","--host","0.0.0.0", "--port", "8000",  "app:app", "--reload"]
 
 

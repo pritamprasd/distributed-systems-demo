@@ -1,27 +1,15 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI
+from items import items_router
+from models import engine, Base
 
-# 1
-app = FastAPI(
-    title="Recipe API", openapi_url="/openapi.json"
-)
+Base.metadata.create_all(bind=engine)
+app = FastAPI(title="items-service")
+app.include_router(items_router)
 
-# 2
-api_router = APIRouter()
+@app.get("/status")
+def status():
+    return "on"
 
-# 3
-@api_router.get("/", status_code=200)
-def root() -> dict:
-    """
-    Root Get
-    """
-    return {"msg": "Hello, World!"}
-
-# 4
-app.include_router(api_router)
-
-
-# 5
 if __name__ == "__main__":
-    # Use this for debugging purposes only
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8080, log_level="debug")

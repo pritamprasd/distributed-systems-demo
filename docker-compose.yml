@@ -3,7 +3,10 @@ services:
   items:
     build: ./items-service
     ports:
-      - "9001:8080"
+      - "9001:8000"
+    environment:
+      - DB_URI=postgresql://testuser:wubalubadubdub@item-db/itemsdb
+      - ENV=dev
     depends_on:
       - item-db
   
@@ -11,5 +14,9 @@ services:
     image: postgres
     ports:
       - "54320:5432"
+    environment:
+      POSTGRES_USER: testuser
+      POSTGRES_PASSWORD: wubalubadubdub 
+      POSTGRES_DB: itemsdb
     volumes:
       - ./temp-db/items-db-data/:/var/lib/postgresql/data/
