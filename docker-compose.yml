@@ -1,0 +1,15 @@
+version: '3.9'
+services:
+  items:
+    build: ./items-service
+    ports:
+      - "9001:8080"
+    depends_on:
+      - item-db
+  
+  item-db:
+    image: postgres
+    ports:
+      - "54320:5432"
+    volumes:
+      - ./temp-db/items-db-data/:/var/lib/postgresql/data/

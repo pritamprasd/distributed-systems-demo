@@ -1,0 +1,9 @@
+[tool.poetry]
+name = "A set of funcational and non-fucntional services running in sandbox"
+version = "0.1.0"
+description = ""
+authors = ["Pritam Prasad < 5097255+pritamprasd@users.noreply.github.com >"]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
