@@ -2,8 +2,7 @@ version: '3.9'
 services:
   items:
     build: ./items-service
-    ports:
-      - "9001:8000"
+    container_name: items
     environment:
       - DB_URI=postgresql://testuser:wubalubadubdub@item-db/itemsdb
       - ENV=dev
@@ -25,6 +24,32 @@ services:
       interval: 10s
       timeout: 45s
       retries: 10
+
+  # grafana:
+  #   build:
+  #     dockerfile: Dockerfile
+  #     context: ./config/grafana
+  #   ports:
+  #     - "33000:3000"
+  # jaeger:
+  #   image: jaegertracing/all-in-one:latest
+  #   ports:
+  #     - "16686:16686"
+  #     - "14268:14268"
+  kraken_designer:
+    image: devopsfaith/krakendesigner:latest
+    ports:
+      - 8787:80
+  krakend_ce:
+    image: devopsfaith/krakend:1.4.1
+    volumes:
+      - ./config/krakend:/etc/krakend
+    ports:
+      - "1234:1234"
+      - "28080:8080"
+      - "28090:8090"
+    # depends_on:
+    #   - jaeger
 
 
   # keycloak-db:
@@ -55,48 +80,7 @@ services:
   #   networks:
   #     - local-keycloak
 
-  kong:
-    platform: linux/arm64
-    image: kong:latest
-    environment:
-      KONG_DATABASE: 'off'
-      KONG_ADMIN_ACCESS_LOG: /dev/stdout
-      KONG_ADMIN_ERROR_LOG: /dev/stderr
-      KONG_PROXY_LISTEN: 0.0.0.0:8000
-      KONG_ADMIN_LISTEN: '0.0.0.0:8001, 0.0.0.0:8444 ssl'
-      KONG_PROXY_ACCESS_LOG: /dev/stdout
-      KONG_PROXY_ERROR_LOG: /dev/stderr
-      KONG_PREFIX: /var/run/kong
-      KONG_DECLARATIVE_CONFIG: /opt/kong/kong.yaml
-    ports:
-      - 28000:8000  # public faceing
-      - 28443:8443  
-      - 28001:8001  # admin api, config
-      - 28444:8444
-    healthcheck:
-      test: ["CMD", "kong", "health"]
-      interval: 10s
-      timeout: 10s
-      retries: 10
-    restart: on-failure:5
-    read_only: true
-    volumes:
-      - kong_prefix_vol:/var/run/kong
-      - kong_tmp_vol:/tmp
-      - ./kong/config/:/opt/kong/
-    security_opt:
-      - no-new-privileges
-
-volumes:
-  kong-vol: {}
-  kong_prefix_vol:
-    driver_opts:
-     type: tmpfs
-     device: tmpfs
-  kong_tmp_vol:
-    driver_opts:
-     type: tmpfs
-     device: tmpfs
-
 networks:
+  default:
+    name: default-ecom-net
   local-keycloak:

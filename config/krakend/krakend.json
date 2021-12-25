@@ -1,0 +1,13 @@
+{
+    "version": 2,
+    "host": [
+        "http://items:8000"
+    ],
+    "endpoints": [{
+        "endpoint": "/all-items",
+        "method": "GET",
+        "backend": [{
+            "url_pattern": "/items"
+        }]
+    }]
+}

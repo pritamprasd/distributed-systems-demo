@@ -24,10 +24,12 @@ def get_one_item(id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail=f"Id: {id}, not found in system")
 
 
-@items_router.get("/items", response_model=List[Item])
+@items_router.get("/items")
 def get_items(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
     items = get_all(db, skip, limit)
-    return items
+    return {
+        'items': items
+    }
 
 
 @items_router.post("/items", response_model=Item)
