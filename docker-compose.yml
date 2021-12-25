@@ -20,35 +20,83 @@ services:
       POSTGRES_DB: itemsdb
     volumes:
       - ./temp-db/items-db-data/:/var/lib/postgresql/data/
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U testuser -d itemsdb" ]
+      interval: 10s
+      timeout: 45s
+      retries: 10
 
-  keycloak-db:
-    image: postgres:13.2
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${POSTGRESQL_DB}
-      POSTGRES_USER: ${POSTGRESQL_USER}
-      POSTGRES_PASSWORD: ${POSTGRESQL_PASS}
-    networks:
-      - local-keycloak
 
-  keycloak:
-    depends_on:
-      - keycloak-db
-    container_name: local_keycloak
+  # keycloak-db:
+  #   image: postgres:13.2
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_DB: ${POSTGRESQL_DB}
+  #     POSTGRES_USER: ${POSTGRESQL_USER}
+  #     POSTGRES_PASSWORD: ${POSTGRESQL_PASS}
+  #   networks:
+  #     - local-keycloak
+
+  # keycloak:
+  #   depends_on:
+  #     - keycloak-db
+  #   environment:
+  #     KEYCLOAK_USER: ${KEYCLOAK_USER} 
+  #     KEYCLOAK_PASSWORD: ${KEYCLOAK_PASSWORD}
+  #     DB_VENDOR: postgres
+  #     DB_ADDR: keycloak-db
+  #     DB_DATABASE: ${POSTGRESQL_DB}
+  #     DB_USER: ${POSTGRESQL_USER}
+  #     DB_PASSWORD: ${POSTGRESQL_PASS}
+  #   image: jboss/keycloak:${KEYCLOAK_VERSION}
+  #   ports:
+  #     - "28080:8080"
+  #   restart: unless-stopped
+  #   networks:
+  #     - local-keycloak
+
+  kong:
+    platform: linux/arm64
+    image: kong:latest
     environment:
-      KEYCLOAK_USER: ${KEYCLOAK_USER} 
-      KEYCLOAK_PASSWORD: ${KEYCLOAK_PASSWORD}
-      DB_VENDOR: postgres
-      DB_ADDR: keycloak-db
-      DB_DATABASE: ${POSTGRESQL_DB}
-      DB_USER: ${POSTGRESQL_USER}
-      DB_PASSWORD: ${POSTGRESQL_PASS}
-    image: jboss/keycloak:${KEYCLOAK_VERSION}
+      KONG_DATABASE: 'off'
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_PROXY_LISTEN: 0.0.0.0:8000
+      KONG_ADMIN_LISTEN: '0.0.0.0:8001, 0.0.0.0:8444 ssl'
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_PREFIX: /var/run/kong
+      KONG_DECLARATIVE_CONFIG: /opt/kong/kong.yaml
     ports:
-      - "28080:8080"
-    restart: unless-stopped
-    networks:
-      - local-keycloak
+      - 28000:8000  # public faceing
+      - 28443:8443  
+      - 28001:8001  # admin api, config
+      - 28444:8444
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    restart: on-failure:5
+    read_only: true
+    volumes:
+      - kong_prefix_vol:/var/run/kong
+      - kong_tmp_vol:/tmp
+      - ./kong/config/:/opt/kong/
+    security_opt:
+      - no-new-privileges
+
+volumes:
+  kong-vol: {}
+  kong_prefix_vol:
+    driver_opts:
+     type: tmpfs
+     device: tmpfs
+  kong_tmp_vol:
+    driver_opts:
+     type: tmpfs
+     device: tmpfs
 
 networks:
   local-keycloak:

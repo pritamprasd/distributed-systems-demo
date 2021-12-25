@@ -22,4 +22,7 @@ Run with docker-compose:
 docker-compose up
 ```
 
+Tools:
+    - pip install poetry 
+
 
